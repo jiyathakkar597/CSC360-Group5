@@ -1,5 +1,3 @@
-# Common Elements — Arrow Connector
-
 ## Group Members
 
 | Name | AU ID     |
