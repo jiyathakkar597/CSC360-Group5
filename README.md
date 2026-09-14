@@ -9,9 +9,7 @@
 
 ## What This Project Is About
 
-This project is a Javgit add README.md
-git commit -m "Add project README with team info and use cases"
-git pusha Swing application built for our Digital Graphics
+This project is a Java Swing application built for our Digital Graphics
 and Image Processing course. It takes two lists of items as input,
 identifies which elements are common to both lists, and visually
 represents those relationships by drawing curved arrows connecting the
