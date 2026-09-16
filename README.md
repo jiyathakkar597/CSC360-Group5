@@ -83,3 +83,22 @@ across two separate collections — shows up in many practical scenarios:
 In short, any situation where two sets of information need to be
 compared — and the connections between them explained visually rather
 than just listed in text — is a real-world application of this concept.
+
+
+## Progress
+
+### BoxRenderer component test
+
+Two columns rendered from test data, with common elements (Banana, Cherry,
+Fig) highlighted. Arrows and input UI not yet implemented.
+
+![BoxRenderer component test](screenshots/boxrenderer-component-test.png)
+
+## Progress
+
+### BoxRenderer component test
+
+Two columns rendered from test data, with common elements (Banana, Cherry,
+Fig) highlighted. Arrows and input UI not yet implemented.
+
+![BoxRenderer component test](screenshots/box_renderer_test.png)
