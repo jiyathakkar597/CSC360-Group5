@@ -184,6 +184,13 @@ public class BoxRenderer {
         int columnsLeft = columnsNeeded(rowsA.size(), rowsPerColumnLeft);
         int columnsRight = columnsNeeded(rowsB.size(), rowsPerColumnRight);
 
+        // Once columns are capped at MAX_COLUMNS, spread rows evenly across the
+        // columns we actually have, instead of leaving the last column to absorb
+        // all the overflow. This keeps every column the same height, and keeps
+        // getPreferredHeight() honest about how tall the content really is.
+        rowsPerColumnLeft = spreadEvenly(rowsA.size(), columnsLeft);
+        rowsPerColumnRight = spreadEvenly(rowsB.size(), columnsRight);
+
         int minWidth = minWidthForColumns(columnsLeft, columnsRight);
         currentWidth = Math.max(panelWidth, minWidth);
 
@@ -262,6 +269,40 @@ public class BoxRenderer {
         return Math.max(1, Math.min(needed, MAX_COLUMNS));
     }
 
+    /**
+     * Counts the distinct x-positions among a list of boxes, used to work out
+     * how many columns were actually drawn for a title's centering math.
+     *
+     * @param boxes the boxes to inspect
+     * @return the number of distinct columns; at least 1
+     */
+    private int getColumnCount(List<Box> boxes) {
+        if (boxes.isEmpty()) {
+            return 1;
+        }
+        java.util.Set<Double> xPositions = new java.util.HashSet<>();
+        for (Box box : boxes) {
+            xPositions.add(box.getShape().x);
+        }
+        return xPositions.size();
+    }
+
+    /**
+     * Recalculates rows per column so that {@code columns} columns split the
+     * rows as evenly as possible, with no leftover overflow dumped into the
+     * last column.
+     *
+     * @param rowCount total rows to distribute
+     * @param columns  number of columns to split them across
+     * @return rows per column; at least 1
+     */
+    private int spreadEvenly(int rowCount, int columns) {
+        if (rowCount <= 0) {
+            return 1;
+        }
+        return (int) Math.ceil(rowCount / (double) columns);
+    }
+
     private int minWidthForColumns(int columnsLeft, int columnsRight) {
         int leftBlock = columnsLeft * BOX_WIDTH + (columnsLeft - 1) * COLUMN_GAP;
         int rightBlock = columnsRight * BOX_WIDTH + (columnsRight - 1) * COLUMN_GAP;
@@ -331,8 +372,10 @@ public class BoxRenderer {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-        drawTitle(g, leftTitle, leftColumnBaseX);
-        drawTitle(g, rightTitle, rightColumnBaseX);
+        int columnsLeft = getColumnCount(leftBoxes);
+        int columnsRight = getColumnCount(rightBoxes);
+        drawTitle(g, leftTitle, leftColumnBaseX, columnsLeft, true);
+        drawTitle(g, rightTitle, rightColumnBaseX, columnsRight, false);
 
         for (Box box : leftBoxes) {
             drawBox(g, box);
@@ -342,11 +385,18 @@ public class BoxRenderer {
         }
     }
 
-    private void drawTitle(Graphics2D g, String title, int columnX) {
+
+    private void drawTitle(Graphics2D g, String title, int columnX, int columns, boolean growRightward) {
         g.setFont(TITLE_FONT);
         g.setColor(TITLE_COLOR);
         FontMetrics fm = g.getFontMetrics();
-        int textX = columnX + (BOX_WIDTH - fm.stringWidth(title)) / 2;
+
+        int blockWidth = columns * BOX_WIDTH + (columns - 1) * COLUMN_GAP;
+        // For the right-hand list, columns grow leftward from columnX, so the
+        // block's left edge is further left than columnX itself.
+        int blockLeft = growRightward ? columnX : columnX - (blockWidth - BOX_WIDTH);
+
+        int textX = blockLeft + (blockWidth - fm.stringWidth(title)) / 2;
         g.drawString(title, textX, TOP_MARGIN - 24);
     }
 
