@@ -1,0 +1,51 @@
+package org.example;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ArrowRendererPreview {
+    public static void main(String[] args) {
+        List<String> listA = new ArrayList<>();
+        List<String> listB = new ArrayList<>();
+
+        // Test case: mostly matching, some gaps, a few unmatched items.
+        // Change the loop below to try the other scenarios
+        // (empty lists, no matches, everything matching, 900+ items, etc.)
+        for (int i = 0; i < 900; i++) {
+            listA.add("item" + i);
+            listB.add(i % 15 == 0 ? "different" + i : "item" + i);
+        }
+
+        Matcher matcher = new Matcher(listA, listB);
+        BoxRenderer boxRenderer = new BoxRenderer();
+        ArrowRenderer arrowRenderer = new ArrowRenderer();
+
+        int assumedVisibleHeight = 700;
+        boxRenderer.layout(matcher, 1000, assumedVisibleHeight);
+
+        int fullWidth = boxRenderer.getPreferredWidth();
+        int fullHeight = boxRenderer.getPreferredHeight();
+
+        JPanel panel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                boxRenderer.draw(g2);
+                arrowRenderer.draw(g2, matcher, boxRenderer);
+            }
+        };
+        panel.setPreferredSize(new Dimension(fullWidth, fullHeight));
+
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setPreferredSize(new Dimension(1000, 700));
+
+        JFrame frame = new JFrame("ArrowRenderer Preview");
+        frame.add(scrollPane);
+        frame.pack();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+    }
+}
