@@ -102,3 +102,19 @@ Two columns rendered from test data, with common elements (Banana, Cherry,
 Fig) highlighted. Arrows and input UI not yet implemented.
 
 ![BoxRenderer component test](screenshots/box_renderer_test.png)
+
+### ArrowRenderer basic test
+
+60 items with gap markers and list B reversed, to confirm each arrow connects
+the correct pair of boxes by original index. Gap markers have no arrows, and
+arrows are thin and semi-transparent so dense crossings stay readable.
+
+![ArrowRenderer basic test](screenshots/arrow_renderer_basic.png)
+
+### ArrowRenderer large test
+
+900 items in a multi-column layout, to check readability at scale. Known
+limitation: arrows from outer columns cross over boxes in the middle columns.
+
+![ArrowRenderer large test](screenshots/arrow_renderer_large.png)
+
