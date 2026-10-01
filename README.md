@@ -57,36 +57,6 @@ src/main/java/org/example/
 └── Main.java            # integration, UI, entry point
 ```
 
-## Real-World Use Cases
-
-The core idea behind this program — visually linking matching items
-across two separate collections — shows up in many practical scenarios:
-
-- **Database schema mapping**: When migrating data between two systems,
-  developers need to see which fields in an old database table
-  correspond to fields in a new one. A visual connector like this makes
-  mismatches and overlaps immediately obvious.
-- **Plagiarism / duplicate detection**: Comparing two documents, code
-  submissions, or datasets to highlight shared phrases, functions, or
-  entries, so a reviewer can quickly see what overlaps.
-- **Inventory reconciliation**: Matching a warehouse's recorded stock
-  list against a supplier's shipment list to flag which items were
-  successfully received versus which are missing or extra.
-- **Bioinformatics / gene matching**: Visualizing shared genes or
-  markers between two datasets (e.g. two species or two samples) is a
-  common technique in comparative genomics research.
-- **Curriculum or syllabus comparison**: Universities comparing two
-  course syllabi to identify overlapping topics when deciding on credit
-  transfers or avoiding redundant content.
-- **UI/UX diagram tools**: The same arrow-and-node visualization pattern
-  underlies tools like flowchart builders, mind maps, and org charts,
-  where relationships between separate groups of items need to be shown
-  clearly at a glance.
-
-In short, any situation where two sets of information need to be
-compared — and the connections between them explained visually rather
-than just listed in text — is a real-world application of this concept.
-
 ## Progress
 
 **Status: 3 of 4 components complete and merged. 1 in progress.**
@@ -135,6 +105,36 @@ Arrows holding up at scale on a large (~900-item) list:
 ### 🔲 Main (integration + UI) — in progress
 Will wire `Matcher`, `BoxRenderer`, and `ArrowRenderer` together into
 one runnable application window with input handling.
+
+## Real-World Use Cases
+
+The core idea behind this program — visually linking matching items
+across two separate collections — shows up in many practical scenarios:
+
+- **Database schema mapping**: When migrating data between two systems,
+  developers need to see which fields in an old database table
+  correspond to fields in a new one. A visual connector like this makes
+  mismatches and overlaps immediately obvious.
+- **Plagiarism / duplicate detection**: Comparing two documents, code
+  submissions, or datasets to highlight shared phrases, functions, or
+  entries, so a reviewer can quickly see what overlaps.
+- **Inventory reconciliation**: Matching a warehouse's recorded stock
+  list against a supplier's shipment list to flag which items were
+  successfully received versus which are missing or extra.
+- **Bioinformatics / gene matching**: Visualizing shared genes or
+  markers between two datasets (e.g. two species or two samples) is a
+  common technique in comparative genomics research.
+- **Curriculum or syllabus comparison**: Universities comparing two
+  course syllabi to identify overlapping topics when deciding on credit
+  transfers or avoiding redundant content.
+- **UI/UX diagram tools**: The same arrow-and-node visualization pattern
+  underlies tools like flowchart builders, mind maps, and org charts,
+  where relationships between separate groups of items need to be shown
+  clearly at a glance.
+
+In short, any situation where two sets of information need to be
+compared — and the connections between them explained visually rather
+than just listed in text — is a real-world application of this concept.
 
 ## Who Did What
 
