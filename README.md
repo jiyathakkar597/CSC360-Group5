@@ -14,8 +14,8 @@ for full details.*
 - [What This Project Is About](#what-this-project-is-about)
 - [Concepts Used](#concepts-used)
 - [Project Structure](#project-structure)
-- [Real-World Use Cases](#real-world-use-cases)
 - [Progress](#progress)
+- [Real-World Use Cases](#real-world-use-cases)
 - [Who Did What](#who-did-what)
 - [Group Members](#group-members)
 
