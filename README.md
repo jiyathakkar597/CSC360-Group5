@@ -1,18 +1,30 @@
-## Group Members
+# List Match Visualizer
 
-| Name | AU ID     |
-|---|-----------|
-| Jiya Thakkar | AU2420189 |
-| Dhriti Sarkar | AU2420123 |
-| Aangi Shah | AU2300055 |
-| Heer Patel | AU2420114 |
+## Current Progress Snapshot
+
+![ArrowRenderer connecting matched boxes](screenshots/arrow_renderer_large.png)
+
+*Matcher, BoxRenderer, and ArrowRenderer are complete — the above shows
+boxes and arrows together on a large (~900-item) list. Main (the final
+integration + UI) is still in progress; see [Progress](#progress) below
+for full details.*
+
+## Table of Contents
+
+- [What This Project Is About](#what-this-project-is-about)
+- [Concepts Used](#concepts-used)
+- [Project Structure](#project-structure)
+- [Real-World Use Cases](#real-world-use-cases)
+- [Progress](#progress)
+- [Who Did What](#who-did-what)
+- [Group Members](#group-members)
 
 ## What This Project Is About
 
 This project is a Java Swing application built for our Digital Graphics
 and Image Processing course. It takes two lists of items as input,
 identifies which elements are common to both lists, and visually
-represents those relationships by drawing curved arrows connecting the
+represents those relationships by drawing arrows connecting the
 matching items across two columns.
 
 The goal was to practice 2D graphics rendering (custom drawing with
@@ -23,15 +35,15 @@ comparison problem.
 ## Concepts Used
 
 - **Java Swing** — building the GUI window, panels, text fields, and buttons.
-- **Custom 2D graphics (`Graphics2D`)** — drawing rounded rectangles,
-  curves (`QuadCurve2D`), and polygons (arrowheads) directly onto a panel.
+- **Custom 2D graphics (`Graphics2D`)** — drawing rounded rectangles and
+  connecting lines directly onto a panel.
 - **Set/List operations** — using `HashSet` intersection to find common
   elements between the two lists.
-- **Coordinate geometry & trigonometry** — computing arrow angles and
-  arrowhead points using `atan2`, `sin`, and `cos`.
+- **Coordinate geometry** — computing anchor points on boxes so arrows
+  connect cleanly regardless of layout (columns, gaps, box height).
 - **Object-oriented design** — splitting the program into separate
-  classes with single responsibilities (data, box rendering, arrow
-  rendering, integration).
+  classes with single responsibilities (data/matching, box rendering,
+  arrow rendering, integration).
 - **Event-driven programming** — responding to button clicks to
   re-render the visualization with new input.
 
@@ -44,34 +56,6 @@ src/main/java/org/example/
 ├── ArrowRenderer.java  # arrow drawing
 └── Main.java            # integration, UI, entry point
 ```
-
-## Progress
-
-### BoxRenderer component test
-
-Two columns rendered from test data, with common elements (Banana, Cherry,
-Fig) highlighted. Arrows and input UI not yet implemented.
-
-![BoxRenderer component test](screenshots/boxrenderer-component-test.png)
-
-## Progress
-
-### BoxRenderer component test
-
-Two columns rendered from test data, with common elements (Banana, Cherry,
-Fig) highlighted. Arrows and input UI not yet implemented.
-
-![BoxRenderer component test](screenshots/box_renderer_test.png)
-
-
-## Who Did What
-
-| Team Member | File | Contribution |
-|---|---|---|
-| Jiya Thakkar | `Matcher.java` | Designed the data representation for the two lists and implemented the logic to find common elements, including handling duplicate values correctly. |
-| Dhriti Sarkar | `BoxRenderer.java` | Implemented the box layout and rendering for both list columns, including highlighting matched items. |
-| Aangi Shah | `ArrowRenderer.java` | Implemented the curved arrow and arrowhead drawing logic connecting matched boxes between the two lists. |
-| Heer Patel | `Main.java` | Integrated all components into a single application, built the input UI (text fields + Compare button), and set up the project structure/repo. |
 
 ## Real-World Use Cases
 
@@ -102,3 +86,70 @@ across two separate collections — shows up in many practical scenarios:
 In short, any situation where two sets of information need to be
 compared — and the connections between them explained visually rather
 than just listed in text — is a real-world application of this concept.
+
+## Progress
+
+**Status: 3 of 4 components complete and merged. 1 in progress.**
+
+### ✅ Matcher (data + matching logic) — merged
+Finds common elements between the two input lists (handling duplicates
+correctly) and exposes original-index match pairs for the rendering
+components to consume.
+
+### ✅ BoxRenderer (box layout + drawing) — merged
+Renders both list columns as boxes, with the following handled:
+- Matched items visually highlighted.
+- Large lists (900+ items) auto-fit box sizing to the available space
+  and wrap into multiple columns with a scrollbar, instead of forcing
+  endless single-column scrolling.
+- Long non-matching stretches are collapsed into a single "gap marker"
+  row (e.g. "-- 14 hidden --") so sparse matches don't require scrolling
+  past hundreds of irrelevant rows.
+
+Two columns rendered from test data, with common elements highlighted:
+
+![BoxRenderer component test](screenshots/box_renderer_test.png)
+
+Gap markers collapsing long non-matching stretches:
+
+![BoxRenderer gap markers](screenshots/box_renderer_gap_markers.png)
+
+Multi-column auto-fit layout with ~900 items:
+
+![BoxRenderer multi-column layout](screenshots/box_renderer_multicolumn.png)
+
+### ✅ ArrowRenderer (arrow drawing) — merged
+Draws connecting lines between matched boxes using the anchor points
+`BoxRenderer` exposes on each box. Uses a thin, semi-transparent stroke
+so large numbers of overlapping arrows stay readable instead of turning
+into a solid block of color.
+
+Arrows connecting matched boxes on a small/medium list:
+
+![ArrowRenderer basic test](screenshots/arrow_renderer_basic.png)
+
+Arrows holding up at scale on a large (~900-item) list:
+
+![ArrowRenderer large list](screenshots/arrow_renderer_large.png)
+
+### 🔲 Main (integration + UI) — in progress
+Will wire `Matcher`, `BoxRenderer`, and `ArrowRenderer` together into
+one runnable application window with input handling.
+
+## Who Did What
+
+| Team Member | File | Contribution |
+|---|---|---|
+| Jiya Thakkar | `Matcher.java` | Designed the data representation for the two lists and implemented the logic to find common elements, including handling duplicate values correctly. |
+| Dhriti Sarkar | `BoxRenderer.java` | Implemented the box layout and rendering for both list columns, including highlighting matched items, auto-fit sizing and multi-column wrapping for large lists, and gap markers for sparse matches. |
+| Aangi Shah | `ArrowRenderer.java` | Implemented the arrow drawing logic connecting matched boxes between the two lists, including handling visual density for large match counts. |
+| Heer Patel | `Main.java` | Integrating all components into a single application, building the input UI, and setting up the project structure/repo. |
+
+## Group Members
+
+| Name | AU ID     |
+|---|-----------|
+| Jiya Thakkar | AU2420189 |
+| Dhriti Sarkar | AU2420123 |
+| Aangi Shah | AU2300055 |
+| Heer Patel | AU2420114 |
