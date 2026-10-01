@@ -13,10 +13,12 @@ public class ArrowRendererPreview {
         // Test case: mostly matching, some gaps, a few unmatched items.
         // Change the loop below to try the other scenarios
         // (empty lists, no matches, everything matching, 900+ items, etc.)
-        for (int i = 0; i < 900; i++) {
+        for (int i = 0; i < 60; i++) {
             listA.add("item" + i);
-            listB.add(i % 15 == 0 ? "different" + i : "item" + i);
+            boolean unmatched = (i >= 20 && i < 26) || i % 15 == 0;
+            listB.add(unmatched ? "different" + i : "item" + i);
         }
+        java.util.Collections.reverse(listB);
 
         Matcher matcher = new Matcher(listA, listB);
         BoxRenderer boxRenderer = new BoxRenderer();
