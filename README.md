@@ -56,6 +56,26 @@ src/main/java/org/example/
 ├── ArrowRenderer.java  # arrow drawing
 └── Main.java            # integration, UI, entry point
 ```
+## Main Application
+
+`Main.java` is the entry point of the List Match Visualizer. It integrates the `Matcher`, `BoxRenderer`, and `ArrowRenderer` components to display two lists, highlight common and non-common elements, and draw connections between matching items. The application uses Java Swing and supports scrolling for large lists.
+
+### Running the Application
+
+1. Open the project in IntelliJ IDEA.
+2. Navigate to `src/main/java/org/example/Main.java`.
+3. Run the `main()` method.
+4. The List Match Visualizer window will open.
+
+### Application Screenshots
+
+**Basic visualization**
+
+![List Match Visualizer - Basic Example](screenshots/main_app_basic.png)
+
+**Large-list visualization**
+
+![List Match Visualizer - Large List](screenshots/main_app_large_scroll.png)
 
 ## Progress
 
