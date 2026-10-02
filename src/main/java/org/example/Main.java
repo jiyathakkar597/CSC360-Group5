@@ -30,6 +30,20 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             List<String> listA = buildSampleListA();
             List<String> listB = buildSampleListB();
+
+            String[] customLists = showCustomListDialog();
+            if (customLists != null) {
+                List<String> parsedA = parseList(customLists[0]);
+                List<String> parsedB = parseList(customLists[1]);
+
+                if (!parsedA.isEmpty()) {
+                    listA = parsedA;
+                }
+                if (!parsedB.isEmpty()) {
+                    listB = parsedB;
+                }
+            }
+
             Matcher matcher = new Matcher(listA, listB);
 
             BoxRenderer boxRenderer = new BoxRenderer();
@@ -102,6 +116,75 @@ public class Main {
 
         panel.setPreferredSize(new Dimension(width, height));
         return panel;
+    }
+
+    /**
+     * Prompts the user to enter their own List A and List B values.
+     * Leaving either text area blank falls back to the sample data for
+     * that list.
+     *
+     * @return a two-element array of {@code {listAText, listBText}},
+     *         or {@code null} if the user cancelled the dialog
+     */
+    private static String[] showCustomListDialog() {
+        JTextArea listAField = new JTextArea(10, 20);
+        JTextArea listBField = new JTextArea(10, 20);
+
+        JPanel panel = new JPanel(new GridLayout(1, 2, 10, 0));
+        panel.add(createLabeledTextArea("List A:", listAField));
+        panel.add(createLabeledTextArea("List B:", listBField));
+
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                panel,
+                "Enter Custom Lists (one item per line or comma-separated; leave blank for sample data)",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result != JOptionPane.OK_OPTION) {
+            return null;
+        }
+
+        return new String[] { listAField.getText(), listBField.getText() };
+    }
+
+    /**
+     * Wraps a text area with a label above it inside a scroll pane.
+     *
+     * @param label    the label describing the text area
+     * @param textArea the text area to wrap
+     * @return a panel containing the label and scrollable text area
+     */
+    private static JPanel createLabeledTextArea(String label, JTextArea textArea) {
+        JPanel panel = new JPanel(new BorderLayout(0, 5));
+        panel.add(new JLabel(label), BorderLayout.NORTH);
+        panel.add(new JScrollPane(textArea), BorderLayout.CENTER);
+        return panel;
+    }
+
+    /**
+     * Parses user-entered text into a list of trimmed, non-empty items.
+     * Items may be separated by commas, newlines, or both.
+     *
+     * @param text the raw text entered by the user
+     * @return the parsed list of items, empty if {@code text} has no items
+     */
+    private static List<String> parseList(String text) {
+        List<String> result = new ArrayList<>();
+
+        if (text == null) {
+            return result;
+        }
+
+        for (String token : text.split("[,\\n]+")) {
+            String trimmed = token.trim();
+            if (!trimmed.isEmpty()) {
+                result.add(trimmed);
+            }
+        }
+
+        return result;
     }
 
     /**
