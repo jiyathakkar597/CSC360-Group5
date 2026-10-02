@@ -3,6 +3,8 @@ package org.example;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
@@ -30,7 +32,6 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             List<String> listA = buildSampleListA();
             List<String> listB = buildSampleListB();
-            int minGap = Matcher.DEFAULT_MIN_GAP;
 
             DialogResult input = showCustomListDialog();
             if (input != null) {
@@ -43,8 +44,8 @@ public class Main {
                 if (!parsedB.isEmpty()) {
                     listB = parsedB;
                 }
-                minGap = input.minGap();
             }
+            final int minGap = (input != null) ? input.minGap() : Matcher.DEFAULT_MIN_GAP;
 
             Matcher matcher = new Matcher(listA, listB);
 
@@ -75,6 +76,34 @@ public class Main {
             scrollPane.setPreferredSize(
                     new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT)
             );
+
+            // Re-lays out the boxes against the viewport's real size whenever the
+            // window is resized, so dragging it wider genuinely adds columns and
+            // cuts down vertical scrolling instead of being stuck with whatever
+            // column count the initial assumed size produced. The resize events
+            // fire rapidly while dragging, so a short debounce timer waits for
+            // the dragging to pause before doing the (relatively expensive)
+            // relayout, rather than running it on every intermediate event.
+            Timer relayoutTimer = new Timer(150, null);
+            relayoutTimer.setRepeats(false);
+            relayoutTimer.addActionListener(e -> {
+                Dimension viewportSize = scrollPane.getViewport().getSize();
+                if (viewportSize.width <= 0 || viewportSize.height <= 0) {
+                    return;
+                }
+                boxRenderer.layout(matcher, viewportSize.width, viewportSize.height, minGap);
+                drawingPanel.setPreferredSize(
+                        new Dimension(boxRenderer.getPreferredWidth(), boxRenderer.getPreferredHeight())
+                );
+                drawingPanel.revalidate();
+                drawingPanel.repaint();
+            });
+            scrollPane.getViewport().addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    relayoutTimer.restart();
+                }
+            });
 
             JFrame frame = new JFrame("List Match Visualizer");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
