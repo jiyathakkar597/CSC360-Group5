@@ -5,15 +5,16 @@
 ![ArrowRenderer connecting matched boxes](screenshots/arrow_renderer_large.png)
 
 *Matcher, BoxRenderer, and ArrowRenderer are complete — the above shows
-boxes and arrows together on a large (~900-item) list. Main (the final
-integration + UI) is still in progress; see [Progress](#progress) below
-for full details.*
+boxes and arrows together on a large (~900-item) list.Main integrates all three components into a runnable Java Swing application. The implementation is complete on the main-ui branch, with its Pull Request merged.*
 
 ## Table of Contents
 
 - [What This Project Is About](#what-this-project-is-about)
 - [Concepts Used](#concepts-used)
 - [Project Structure](#project-structure)
+- [Main Application](#main-application)
+- [How Matching Works](#how-matching-works) 
+- [Application Screenshots](#application-screenshots)
 - [Progress](#progress)
 - [Real-World Use Cases](#real-world-use-cases)
 - [Who Did What](#who-did-what)
@@ -47,6 +48,15 @@ comparison problem.
 - **Event-driven programming** — responding to button clicks to
   re-render the visualization with new input.
 
+## How Matching Works
+
+1. The application receives two lists, List A and List B.
+2. The Matcher identifies common values and records the corresponding original indices.
+3. BoxRenderer lays out the list items and visually distinguishes matched and unmatched items.
+4. ArrowRenderer uses the matching index pairs and box anchor points to draw connections between corresponding items.
+
+The result is a visual representation of the overlap between the two lists, including the positions of matching elements.
+
 ## Project Structure
 
 ```
@@ -79,7 +89,7 @@ src/main/java/org/example/
 
 ## Progress
 
-**Status: 3 of 4 components complete and merged. 1 in progress.**
+**Status: All 4 core components implemented.**
 
 ### ✅ Matcher (data + matching logic) — merged
 Finds common elements between the two input lists (handling duplicates
@@ -122,9 +132,9 @@ Arrows holding up at scale on a large (~900-item) list:
 
 ![ArrowRenderer large list](screenshots/arrow_renderer_large.png)
 
-### 🔲 Main (integration + UI) — in progress
-Will wire `Matcher`, `BoxRenderer`, and `ArrowRenderer` together into
-one runnable application window with input handling.
+### ✅ Main (integration + UI)
+
+Integrates Matcher, BoxRenderer, and ArrowRenderer into a runnable Java Swing application. Displays both lists, highlights matches, and draws connecting arrows.
 
 ## Real-World Use Cases
 
@@ -163,7 +173,7 @@ than just listed in text — is a real-world application of this concept.
 | Jiya Thakkar | `Matcher.java` | Designed the data representation for the two lists and implemented the logic to find common elements, including handling duplicate values correctly. |
 | Dhriti Sarkar | `BoxRenderer.java` | Implemented the box layout and rendering for both list columns, including highlighting matched items, auto-fit sizing and multi-column wrapping for large lists, and gap markers for sparse matches. |
 | Aangi Shah | `ArrowRenderer.java` | Implemented the arrow drawing logic connecting matched boxes between the two lists, including handling visual density for large match counts. |
-| Heer Patel | `Main.java` | Integrating all components into a single application, building the input UI, and setting up the project structure/repo. |
+| Heer Patel | `Main.java` | Integrating all components into a single application, building the input UI, and setting up the project structure/repo.Ran the application and verified visual output across basic matching, duplicate elements, long strings, and large-list scenarios.|
 
 ## Group Members
 
