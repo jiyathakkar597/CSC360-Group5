@@ -1,0 +1,10 @@
+# IDE
+.idea/
+*.iml
+out/
+
+# OS
+.DS_Store
+
+# Compiled class files
+*.class
