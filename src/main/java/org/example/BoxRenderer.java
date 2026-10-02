@@ -101,7 +101,7 @@ public class BoxRenderer {
     private static final int MIN_BOX_HEIGHT = 16;   // smallest we shrink to before adding columns
     private static final int SPACING = 4;            // vertical space between boxes in a column
     private static final int COLUMN_GAP = 24;         // horizontal space between columns on the same side
-    private static final int MAX_COLUMNS = 4;         // soft cap; the last column absorbs any overflow
+    private static final int MAX_COLUMNS_CAP = 8;     // absolute ceiling, regardless of how wide the panel is
     private static final int TOP_MARGIN = 70;         // leaves room for the column titles
     private static final int BOTTOM_MARGIN = 20;
     private static final int SIDE_MARGIN = 60;
@@ -160,6 +160,23 @@ public class BoxRenderer {
      *                    reproduces the old fixed-height, single-column layout
      */
     public void layout(Matcher matcher, int panelWidth, int panelHeight) {
+        layout(matcher, panelWidth, panelHeight, Matcher.DEFAULT_MIN_GAP);
+    }
+
+    /**
+     * Same as {@link #layout(Matcher, int, int)}, but lets the caller control
+     * how many consecutive non-matching items are collapsed into a single
+     * gap placeholder box.
+     *
+     * @param matcher     the Matcher holding the two lists
+     * @param panelWidth  current width of the drawing panel
+     * @param panelHeight current visible height of the drawing panel; pass 0
+     *                    (or any value 0 or less) for unlimited height
+     * @param minGap      minimum run length of consecutive non-matching items
+     *                    before they are collapsed into a gap box; smaller
+     *                    values collapse more aggressively
+     */
+    public void layout(Matcher matcher, int panelWidth, int panelHeight, int minGap) {
         leftBoxes.clear();
         rightBoxes.clear();
         leftIndexToBox.clear();
@@ -169,8 +186,8 @@ public class BoxRenderer {
             return;
         }
 
-        List<Matcher.Row> rowsA = matcher.buildRowsA();
-        List<Matcher.Row> rowsB = matcher.buildRowsB();
+        List<Matcher.Row> rowsA = matcher.buildRowsA(minGap);
+        List<Matcher.Row> rowsB = matcher.buildRowsB(minGap);
 
         int availableHeight = panelHeight - TOP_MARGIN - BOTTOM_MARGIN;
 
@@ -181,10 +198,11 @@ public class BoxRenderer {
         rowsPerColumnLeft = computeRowsPerColumn(rowsA.size(), currentBoxHeight, availableHeight);
         rowsPerColumnRight = computeRowsPerColumn(rowsB.size(), currentBoxHeight, availableHeight);
 
-        int columnsLeft = columnsNeeded(rowsA.size(), rowsPerColumnLeft);
-        int columnsRight = columnsNeeded(rowsB.size(), rowsPerColumnRight);
+        int maxColumns = computeMaxColumnsForWidth(panelWidth);
+        int columnsLeft = columnsNeeded(rowsA.size(), rowsPerColumnLeft, maxColumns);
+        int columnsRight = columnsNeeded(rowsB.size(), rowsPerColumnRight, maxColumns);
 
-        // Once columns are capped at MAX_COLUMNS, spread rows evenly across the
+        // Once columns are capped at maxColumns, spread rows evenly across the
         // columns we actually have, instead of leaving the last column to absorb
         // all the overflow. This keeps every column the same height, and keeps
         // getPreferredHeight() honest about how tall the content really is.
@@ -257,16 +275,33 @@ public class BoxRenderer {
     }
 
     /**
-     * Number of columns needed to hold every row, capped at {@link #MAX_COLUMNS}.
+     * Number of columns needed to hold every row, capped at {@code maxColumns}.
      * If the cap is reached, the last column simply grows taller than the
      * others, which is the scrolling fallback of last resort.
      */
-    private int columnsNeeded(int rowCount, int rowsPerColumn) {
+    private int columnsNeeded(int rowCount, int rowsPerColumn, int maxColumns) {
         if (rowCount <= 0) {
             return 1;
         }
         int needed = (int) Math.ceil(rowCount / (double) rowsPerColumn);
-        return Math.max(1, Math.min(needed, MAX_COLUMNS));
+        return Math.max(1, Math.min(needed, maxColumns));
+    }
+
+    /**
+     * Works out how many columns of boxes can sit side by side, on one side
+     * of the panel, within {@code panelWidth} before the layout would have to
+     * grow wider than the window. Widening the window therefore lets more
+     * columns appear (and shortens the columns, reducing vertical scrolling)
+     * instead of being stuck at a fixed column count.
+     *
+     * @param panelWidth current width of the drawing panel
+     * @return columns that fit per side, between 1 and {@link #MAX_COLUMNS_CAP}
+     */
+    private int computeMaxColumnsForWidth(int panelWidth) {
+        int availableWidth = panelWidth - 2 * SIDE_MARGIN - CENTER_GAP;
+        int perSideWidth = availableWidth / 2;
+        int columns = (perSideWidth + COLUMN_GAP) / (BOX_WIDTH + COLUMN_GAP);
+        return Math.max(1, Math.min(columns, MAX_COLUMNS_CAP));
     }
 
     /**

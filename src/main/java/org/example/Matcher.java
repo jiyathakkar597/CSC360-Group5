@@ -86,8 +86,16 @@ public class Matcher {
         return buildRows(listA, DEFAULT_MIN_GAP);
     }
 
+    public List<Row> buildRowsA(int minGap) {
+        return buildRows(listA, minGap);
+    }
+
     public List<Row> buildRowsB() {
         return buildRows(listB, DEFAULT_MIN_GAP);
+    }
+
+    public List<Row> buildRowsB(int minGap) {
+        return buildRows(listB, minGap);
     }
 
     public List<Row> buildRows(List<String> list, int minGap) {
