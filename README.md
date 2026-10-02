@@ -129,15 +129,29 @@ in action together.
 
 ### ✅ ArrowRenderer (arrow drawing) — merged
 Draws connecting lines between matched boxes using the anchor points
-`BoxRenderer` exposes on each box. Uses a thin, semi-transparent stroke
-so large numbers of overlapping arrows stay readable instead of turning
-into a solid block of color. In multi-column layouts, arrows from outer
-columns are routed through the gaps between rows (one lane per column)
-rather than drawn straight across, so they never pass over other boxes.
+`BoxRenderer` exposes on each box. To keep lines easy to follow:
+- **Colour-coded pairs.** Each matched pair gets a colour from a
+  colour-blind-safe palette, used for its line and for the outlines of
+  both of its boxes, so matching elements can often be paired by colour
+  alone. Neighbouring lines never share a colour.
+- **No lines over boxes.** In multi-column layouts, arrows from outer
+  columns are routed through the gaps between rows (one lane per column)
+  rather than drawn straight across other boxes.
+- **No convergence point.** Lines that change height cross the centre gap
+  on their own vertical track instead of as diagonals, which would all
+  meet in one spot when List B is a reversed List A. (With too many lines
+  to give each a visible track, they fall back to semi-transparent
+  diagonals.)
+- **Hover to highlight.** Hovering a box or a line draws that pair bold
+  and fades every other line.
 
 Arrows connecting matched boxes on a small/medium list:
 
 ![ArrowRenderer basic test](screenshots/arrow_renderer_basic.png)
+
+Hovering `item40` highlights its match and fades the rest:
+
+![ArrowRenderer hover highlight](screenshots/arrow_renderer_hover.png)
 
 Arrows holding up at scale on a large (~900-item) list:
 

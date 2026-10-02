@@ -5,6 +5,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
@@ -145,6 +147,26 @@ public class Main {
                 }
             }
         };
+
+        // Hovering a box or a line highlights that match and fades the rest,
+        // so a single line can be followed even when many cross the gap.
+        MouseAdapter hoverTracker = new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if (arrowRenderer.setHoverPoint(e.getPoint())) {
+                    panel.repaint();
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (arrowRenderer.setHoverPoint(null)) {
+                    panel.repaint();
+                }
+            }
+        };
+        panel.addMouseListener(hoverTracker);
+        panel.addMouseMotionListener(hoverTracker);
 
         panel.setPreferredSize(new Dimension(width, height));
         return panel;

@@ -2,6 +2,8 @@ package org.example;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +41,23 @@ public class ArrowRendererPreview {
                 arrowRenderer.draw(g2, matcher, boxRenderer);
             }
         };
+        MouseAdapter hoverTracker = new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if (arrowRenderer.setHoverPoint(e.getPoint())) {
+                    panel.repaint();
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (arrowRenderer.setHoverPoint(null)) {
+                    panel.repaint();
+                }
+            }
+        };
+        panel.addMouseListener(hoverTracker);
+        panel.addMouseMotionListener(hoverTracker);
         panel.setPreferredSize(new Dimension(fullWidth, fullHeight));
 
         JScrollPane scrollPane = new JScrollPane(panel);
