@@ -131,7 +131,9 @@ in action together.
 Draws connecting lines between matched boxes using the anchor points
 `BoxRenderer` exposes on each box. Uses a thin, semi-transparent stroke
 so large numbers of overlapping arrows stay readable instead of turning
-into a solid block of color.
+into a solid block of color. In multi-column layouts, arrows from outer
+columns are routed through the gaps between rows (one lane per column)
+rather than drawn straight across, so they never pass over other boxes.
 
 Arrows connecting matched boxes on a small/medium list:
 
