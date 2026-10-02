@@ -77,10 +77,27 @@ src/main/java/org/example/
 
 ### Running the Application
 
+Requires Java 17 or newer.
+
+**From IntelliJ IDEA**
+
 1. Open the project in IntelliJ IDEA.
 2. Navigate to `src/main/java/org/example/Main.java`.
 3. Run the `main()` method.
 4. The List Match Visualizer window will open.
+
+**From the terminal**
+
+From the project root, compile into `out/` (already git-ignored) and run:
+
+```sh
+javac -d out src/main/java/org/example/*.java
+java -cp out org.example.Main
+```
+
+The app opens with the custom list input dialog. To open the standalone
+arrow preview instead, run `java -cp out org.example.ArrowRendererPreview`.
+Re-run the `javac` step after changing any source file.
 
 ### Application Screenshots
 
