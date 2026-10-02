@@ -48,13 +48,16 @@ public class BoxRenderer {
         private final boolean matched;
         private final boolean gap;
         private final int gapCount;
+        private final int columnIndex;
         private final RoundRectangle2D.Double shape;
 
-        Box(String label, boolean matched, boolean gap, int gapCount, RoundRectangle2D.Double shape) {
+        Box(String label, boolean matched, boolean gap, int gapCount, int columnIndex,
+            RoundRectangle2D.Double shape) {
             this.label = label;
             this.matched = matched;
             this.gap = gap;
             this.gapCount = gapCount;
+            this.columnIndex = columnIndex;
             this.shape = shape;
         }
 
@@ -74,6 +77,14 @@ public class BoxRenderer {
         /** Number of items this box hides; 0 for a normal item box. */
         public int getGapCount() {
             return gapCount;
+        }
+
+        /**
+         * Which column on its side this box sits in: 0 is the outermost
+         * column (next to the panel edge), higher numbers move toward the centre.
+         */
+        public int getColumnIndex() {
+            return columnIndex;
         }
 
         public RoundRectangle2D.Double getShape() {
@@ -99,7 +110,9 @@ public class BoxRenderer {
     private static final int BOX_WIDTH = 170;
     private static final int MAX_BOX_HEIGHT = 38;   // box height for short lists
     private static final int MIN_BOX_HEIGHT = 16;   // smallest we shrink to before adding columns
-    private static final int SPACING = 4;            // vertical space between boxes in a column
+    private static final int SPACING = 4;            // vertical space between boxes when there is one column per side
+    private static final int LANE_PADDING = 3;       // clearance between a box border and the nearest arrow lane
+    private static final int LANE_PITCH = 3;         // vertical distance between neighbouring arrow lanes
     private static final int COLUMN_GAP = 24;         // horizontal space between columns on the same side
     private static final int MAX_COLUMNS_CAP = 8;     // absolute ceiling, regardless of how wide the panel is
     private static final int TOP_MARGIN = 70;         // leaves room for the column titles
@@ -143,9 +156,12 @@ public class BoxRenderer {
 
     // remembered from the last layout() call, used by getPreferredWidth/Height
     private int currentBoxHeight = MAX_BOX_HEIGHT;
+    private int currentSpacing = SPACING;
     private int currentWidth = minWidthForColumns(1, 1);
     private int rowsPerColumnLeft;
     private int rowsPerColumnRight;
+    private int columnsLeft = 1;
+    private int columnsRight = 1;
 
     /**
      * Computes the position of every box from the Matcher's data, shrinking
@@ -190,17 +206,32 @@ public class BoxRenderer {
         List<Matcher.Row> rowsB = matcher.buildRowsB(minGap);
 
         int availableHeight = panelHeight - TOP_MARGIN - BOTTOM_MARGIN;
-
-        int heightA = computeAutoFitHeight(rowsA.size(), availableHeight);
-        int heightB = computeAutoFitHeight(rowsB.size(), availableHeight);
-        currentBoxHeight = Math.min(heightA, heightB);
-
-        rowsPerColumnLeft = computeRowsPerColumn(rowsA.size(), currentBoxHeight, availableHeight);
-        rowsPerColumnRight = computeRowsPerColumn(rowsB.size(), currentBoxHeight, availableHeight);
-
         int maxColumns = computeMaxColumnsForWidth(panelWidth);
-        int columnsLeft = columnsNeeded(rowsA.size(), rowsPerColumnLeft, maxColumns);
-        int columnsRight = columnsNeeded(rowsB.size(), rowsPerColumnRight, maxColumns);
+
+        // Arrows from outer columns travel to the centre through the gaps
+        // between rows, one lane per outer column, so the row spacing has to
+        // grow with the column count. Wider spacing can in turn push rows into
+        // extra columns, so repeat until the spacing is enough for the column
+        // count it produces. The column count only ever grows and is capped,
+        // so this settles within a few passes.
+        currentSpacing = SPACING;
+        while (true) {
+            int heightA = computeAutoFitHeight(rowsA.size(), availableHeight);
+            int heightB = computeAutoFitHeight(rowsB.size(), availableHeight);
+            currentBoxHeight = Math.min(heightA, heightB);
+
+            rowsPerColumnLeft = computeRowsPerColumn(rowsA.size(), currentBoxHeight, availableHeight);
+            rowsPerColumnRight = computeRowsPerColumn(rowsB.size(), currentBoxHeight, availableHeight);
+
+            columnsLeft = columnsNeeded(rowsA.size(), rowsPerColumnLeft, maxColumns);
+            columnsRight = columnsNeeded(rowsB.size(), rowsPerColumnRight, maxColumns);
+
+            int requiredSpacing = spacingForColumns(Math.max(columnsLeft, columnsRight));
+            if (requiredSpacing <= currentSpacing) {
+                break;
+            }
+            currentSpacing = requiredSpacing;
+        }
 
         // Once columns are capped at maxColumns, spread rows evenly across the
         // columns we actually have, instead of leaving the last column to absorb
@@ -208,6 +239,11 @@ public class BoxRenderer {
         // getPreferredHeight() honest about how tall the content really is.
         rowsPerColumnLeft = spreadEvenly(rowsA.size(), columnsLeft);
         rowsPerColumnRight = spreadEvenly(rowsB.size(), columnsRight);
+        // Spreading can leave a trailing column empty (e.g. 9 rows over 4
+        // columns is 3 per column, so only 3 are used); arrow routing needs the
+        // innermost column that really has boxes in it.
+        columnsLeft = columnsNeeded(rowsA.size(), rowsPerColumnLeft, maxColumns);
+        columnsRight = columnsNeeded(rowsB.size(), rowsPerColumnRight, maxColumns);
 
         int minWidth = minWidthForColumns(columnsLeft, columnsRight);
         currentWidth = Math.max(panelWidth, minWidth);
@@ -249,7 +285,7 @@ public class BoxRenderer {
         if (rowCount <= 0 || availableHeight <= 0) {
             return MAX_BOX_HEIGHT;
         }
-        int raw = (availableHeight - SPACING * (rowCount - 1)) / rowCount;
+        int raw = (availableHeight - currentSpacing * (rowCount - 1)) / rowCount;
         return Math.max(MIN_BOX_HEIGHT, Math.min(MAX_BOX_HEIGHT, raw));
     }
 
@@ -270,7 +306,7 @@ public class BoxRenderer {
         if (availableHeight <= 0) {
             return rowCount;
         }
-        int perColumn = (availableHeight + SPACING) / (boxHeight + SPACING);
+        int perColumn = (availableHeight + currentSpacing) / (boxHeight + currentSpacing);
         return Math.max(1, Math.min(perColumn, rowCount));
     }
 
@@ -367,12 +403,12 @@ public class BoxRenderer {
             int x = growRightward
                     ? baseX + columnIndex * (BOX_WIDTH + COLUMN_GAP)
                     : baseX - columnIndex * (BOX_WIDTH + COLUMN_GAP);
-            int y = TOP_MARGIN + positionInColumn * (currentBoxHeight + SPACING);
+            int y = TOP_MARGIN + positionInColumn * (currentBoxHeight + currentSpacing);
 
             Matcher.Row row = rows.get(i);
             Box box = (row instanceof Matcher.GapRow gapRow)
-                    ? makeGapBox(gapRow, x, y)
-                    : makeItemBox((Matcher.ItemRow) row, x, y);
+                    ? makeGapBox(gapRow, columnIndex, x, y)
+                    : makeItemBox((Matcher.ItemRow) row, columnIndex, x, y);
             outBoxes.add(box);
 
             if (row instanceof Matcher.ItemRow itemRow) {
@@ -389,17 +425,33 @@ public class BoxRenderer {
         }
     }
 
-    private Box makeItemBox(Matcher.ItemRow row, int x, int y) {
+    private Box makeItemBox(Matcher.ItemRow row, int columnIndex, int x, int y) {
         RoundRectangle2D.Double shape = new RoundRectangle2D.Double(
                 x, y, BOX_WIDTH, currentBoxHeight, CORNER_ARC, CORNER_ARC);
-        return new Box(row.text(), row.matched(), false, 0, shape);
+        return new Box(row.text(), row.matched(), false, 0, columnIndex, shape);
     }
 
-    private Box makeGapBox(Matcher.GapRow row, int x, int y) {
+    private Box makeGapBox(Matcher.GapRow row, int columnIndex, int x, int y) {
         RoundRectangle2D.Double shape = new RoundRectangle2D.Double(
                 x, y, BOX_WIDTH, currentBoxHeight, CORNER_ARC, CORNER_ARC);
         String label = "-- " + row.count() + " hidden --";
-        return new Box(label, false, true, row.count(), shape);
+        return new Box(label, false, true, row.count(), columnIndex, shape);
+    }
+
+    /**
+     * Row spacing needed so that every outer column on a side gets its own
+     * arrow lane in the gap below each row, with clearance from the boxes
+     * above and below.
+     *
+     * @param columns the larger of the two sides' column counts
+     * @return vertical space to leave between boxes in a column
+     */
+    private int spacingForColumns(int columns) {
+        int lanes = columns - 1;
+        if (lanes <= 0) {
+            return SPACING;
+        }
+        return Math.max(SPACING, 2 * LANE_PADDING + (lanes - 1) * LANE_PITCH);
     }
 
     /** Draws the column titles and every box. Arrows are drawn separately by ArrowRenderer. */
@@ -555,13 +607,52 @@ public class BoxRenderer {
         return rightIndexToBox.get(originalIndex);
     }
 
+    /** Number of List A columns actually drawn. Call after {@link #layout}. */
+    public int getLeftColumnCount() {
+        return columnsLeft;
+    }
+
+    /** Number of List B columns actually drawn. Call after {@link #layout}. */
+    public int getRightColumnCount() {
+        return columnsRight;
+    }
+
+    /** X of the right edge of List A's innermost column, where the centre gap begins. */
+    public double getLeftInnerEdgeX() {
+        return leftColumnBaseX + (columnsLeft - 1) * (BOX_WIDTH + COLUMN_GAP) + BOX_WIDTH;
+    }
+
+    /** X of the left edge of List B's innermost column, where the centre gap ends. */
+    public double getRightInnerEdgeX() {
+        return rightColumnBaseX - (columnsRight - 1) * (BOX_WIDTH + COLUMN_GAP);
+    }
+
+    /** Horizontal space between neighbouring columns on the same side. */
+    public int getColumnGap() {
+        return COLUMN_GAP;
+    }
+
+    /**
+     * Y of an arrow lane in the gap just below the given box. Lanes run
+     * horizontally between rows, so an arrow can cross the columns between
+     * its box and the centre without passing over any other box.
+     *
+     * @param box  the box whose row the lane belongs to
+     * @param lane 0 for the lane closest to the box, counting downward
+     * @return the y coordinate of that lane
+     */
+    public double getLaneY(Box box, int lane) {
+        RoundRectangle2D.Double shape = box.getShape();
+        return shape.y + shape.height + LANE_PADDING + lane * LANE_PITCH;
+    }
+
     /** Height the panel needs so the tallest column fits. Call after {@link #layout}. */
     public int getPreferredHeight() {
         int rows = Math.max(rowsPerColumnLeft, rowsPerColumnRight);
         if (rows == 0) {
             return TOP_MARGIN + BOTTOM_MARGIN;
         }
-        return TOP_MARGIN + rows * (currentBoxHeight + SPACING) + BOTTOM_MARGIN;
+        return TOP_MARGIN + rows * (currentBoxHeight + currentSpacing) + BOTTOM_MARGIN;
     }
 
     /** Width the panel needs so every column fits. Call after {@link #layout}. */

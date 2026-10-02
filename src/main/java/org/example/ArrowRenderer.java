@@ -4,7 +4,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.List;
 
@@ -70,13 +70,62 @@ public class ArrowRenderer {
                     continue;
                 }
 
-                Point2D.Double start = leftBox.rightAnchor();
-                Point2D.Double end = rightBox.leftAnchor();
-                g2.draw(new Line2D.Double(start, end));
+                g2.draw(buildRoute(leftBox, rightBox, boxes));
             }
         } finally {
             g2.dispose();
         }
+    }
+
+    /**
+     * Builds the path for one arrow so that it never crosses another box.
+     *
+     * <p>A box in the innermost column on its side connects straight to the
+     * centre gap. A box in an outer column first steps into the gutter beside
+     * its own column, drops into the gap below its row, and follows that gap
+     * horizontally past the inner columns to the centre. Each outer column
+     * gets its own lane inside the gap (the column nearest the centre takes
+     * the lane closest to the row), so arrows from different columns never
+     * merge and never cross each other's turns. Only the segment across the
+     * centre gap is diagonal.</p>
+     *
+     * @param leftBox  the matched box in List A
+     * @param rightBox the matched box in List B
+     * @param boxes    the laid-out box renderer, for column and lane geometry
+     * @return the path to stroke
+     */
+    private Path2D.Double buildRoute(BoxRenderer.Box leftBox, BoxRenderer.Box rightBox, BoxRenderer boxes) {
+        double halfGap = boxes.getColumnGap() / 2.0;
+        double leftEdgeX = boxes.getLeftInnerEdgeX();
+        double rightEdgeX = boxes.getRightInnerEdgeX();
+
+        Path2D.Double path = new Path2D.Double();
+
+        // List A side: from the box out to the centre gap.
+        Point2D.Double start = leftBox.rightAnchor();
+        path.moveTo(start.x, start.y);
+        int leftLane = boxes.getLeftColumnCount() - 2 - leftBox.getColumnIndex();
+        if (leftLane >= 0) {
+            double gutterX = start.x + halfGap;
+            double laneY = boxes.getLaneY(leftBox, leftLane);
+            path.lineTo(gutterX, start.y);
+            path.lineTo(gutterX, laneY);
+            path.lineTo(leftEdgeX, laneY);
+        }
+
+        // List B side, worked out from the box inward and then joined up.
+        Point2D.Double end = rightBox.leftAnchor();
+        int rightLane = boxes.getRightColumnCount() - 2 - rightBox.getColumnIndex();
+        if (rightLane >= 0) {
+            double gutterX = end.x - halfGap;
+            double laneY = boxes.getLaneY(rightBox, rightLane);
+            path.lineTo(rightEdgeX, laneY);
+            path.lineTo(gutterX, laneY);
+            path.lineTo(gutterX, end.y);
+        }
+        path.lineTo(end.x, end.y);
+
+        return path;
     }
 
     /**
