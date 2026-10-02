@@ -30,11 +30,12 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             List<String> listA = buildSampleListA();
             List<String> listB = buildSampleListB();
+            int minGap = Matcher.DEFAULT_MIN_GAP;
 
-            String[] customLists = showCustomListDialog();
-            if (customLists != null) {
-                List<String> parsedA = parseList(customLists[0]);
-                List<String> parsedB = parseList(customLists[1]);
+            DialogResult input = showCustomListDialog();
+            if (input != null) {
+                List<String> parsedA = parseList(input.listAText());
+                List<String> parsedB = parseList(input.listBText());
 
                 if (!parsedA.isEmpty()) {
                     listA = parsedA;
@@ -42,6 +43,7 @@ public class Main {
                 if (!parsedB.isEmpty()) {
                     listB = parsedB;
                 }
+                minGap = input.minGap();
             }
 
             Matcher matcher = new Matcher(listA, listB);
@@ -52,7 +54,8 @@ public class Main {
             boxRenderer.layout(
                     matcher,
                     PANEL_WIDTH,
-                    ASSUMED_VISIBLE_HEIGHT
+                    ASSUMED_VISIBLE_HEIGHT,
+                    minGap
             );
 
             boxRenderer.setTitles("List A", "List B");
@@ -119,20 +122,41 @@ public class Main {
     }
 
     /**
-     * Prompts the user to enter their own List A and List B values.
-     * Leaving either text area blank falls back to the sample data for
-     * that list.
+     * Holds the values collected from {@link #showCustomListDialog()}.
      *
-     * @return a two-element array of {@code {listAText, listBText}},
-     *         or {@code null} if the user cancelled the dialog
+     * @param listAText raw text entered for List A
+     * @param listBText raw text entered for List B
+     * @param minGap    minimum run of consecutive non-matching items to
+     *                  collapse into a single placeholder box
      */
-    private static String[] showCustomListDialog() {
+    private record DialogResult(String listAText, String listBText, int minGap) {
+    }
+
+    /**
+     * Prompts the user to enter their own List A and List B values, plus how
+     * aggressively runs of non-matching items should be collapsed. Leaving
+     * either text area blank falls back to the sample data for that list.
+     *
+     * @return the entered values, or {@code null} if the user cancelled the dialog
+     */
+    private static DialogResult showCustomListDialog() {
         JTextArea listAField = new JTextArea(10, 20);
         JTextArea listBField = new JTextArea(10, 20);
 
-        JPanel panel = new JPanel(new GridLayout(1, 2, 10, 0));
-        panel.add(createLabeledTextArea("List A:", listAField));
-        panel.add(createLabeledTextArea("List B:", listBField));
+        JPanel listsPanel = new JPanel(new GridLayout(1, 2, 10, 0));
+        listsPanel.add(createLabeledTextArea("List A:", listAField));
+        listsPanel.add(createLabeledTextArea("List B:", listBField));
+
+        JSpinner minGapSpinner = new JSpinner(
+                new SpinnerNumberModel(Matcher.DEFAULT_MIN_GAP, 1, 100, 1)
+        );
+        JPanel minGapPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        minGapPanel.add(new JLabel("Collapse runs of at least this many consecutive non-matches:"));
+        minGapPanel.add(minGapSpinner);
+
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        panel.add(listsPanel, BorderLayout.CENTER);
+        panel.add(minGapPanel, BorderLayout.SOUTH);
 
         int result = JOptionPane.showConfirmDialog(
                 null,
@@ -146,7 +170,11 @@ public class Main {
             return null;
         }
 
-        return new String[] { listAField.getText(), listBField.getText() };
+        return new DialogResult(
+                listAField.getText(),
+                listBField.getText(),
+                (Integer) minGapSpinner.getValue()
+        );
     }
 
     /**
