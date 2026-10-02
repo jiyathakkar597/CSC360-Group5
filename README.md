@@ -1,11 +1,16 @@
 # List Match Visualizer
 
+
 ## Current Progress Snapshot
 
-![ArrowRenderer connecting matched boxes](screenshots/arrow_renderer_large.png)
+![List Match Visualizer - custom input on a large, mostly-matching list](screenshots/main_app_large_scroll.png)
 
-*Matcher, BoxRenderer, and ArrowRenderer are complete — the above shows
-boxes and arrows together on a large (~900-item) list.Main integrates all three components into a runnable Java Swing application. The implementation is complete on the main-ui branch, with its Pull Request merged.*
+*All four components are complete and integrated into a runnable Java Swing
+app. The above shows a user-entered 1000-item list (500 non-matching, 400
+matching, 100 non-matching) rendered through the real application: long
+non-matching runs collapse into "-- N hidden --" gap markers on both sides,
+while the matching middle section auto-fits into multiple columns — and the
+column count keeps adjusting live as the window is resized.*
 
 ## Table of Contents
 
@@ -79,11 +84,22 @@ src/main/java/org/example/
 
 ### Application Screenshots
 
+**Custom list input**
+
+Users can type or paste their own values for List A and List B, and control
+how aggressively long non-matching runs are collapsed. Leaving a field blank
+falls back to sample data.
+
+![List Match Visualizer - custom list input dialog](screenshots/main_app_input_dialog.png)
+
 **Basic visualization**
 
 ![List Match Visualizer - Basic Example](screenshots/main_app_basic.png)
 
 **Large-list visualization**
+
+Gap markers collapsing long non-matching runs, combined with the multi-column
+auto-fit layout for the matching section:
 
 ![List Match Visualizer - Large List](screenshots/main_app_large_scroll.png)
 
@@ -99,24 +115,17 @@ components to consume.
 ### ✅ BoxRenderer (box layout + drawing) — merged
 Renders both list columns as boxes, with the following handled:
 - Matched items visually highlighted.
-- Large lists (900+ items) auto-fit box sizing to the available space
-  and wrap into multiple columns with a scrollbar, instead of forcing
-  endless single-column scrolling.
+- Large lists auto-fit box sizing to the available space and wrap into
+  multiple columns, and the column count re-adjusts live as the window
+  is resized, instead of forcing endless single-column scrolling.
 - Long non-matching stretches are collapsed into a single "gap marker"
-  row (e.g. "-- 14 hidden --") so sparse matches don't require scrolling
-  past hundreds of irrelevant rows.
+  row (e.g. "-- 500 hidden --") so sparse matches don't require scrolling
+  past hundreds of irrelevant rows. The run-length threshold for this is
+  configurable from the input dialog.
 
-Two columns rendered from test data, with common elements highlighted:
-
-![BoxRenderer component test](screenshots/box_renderer_test.png)
-
-Gap markers collapsing long non-matching stretches:
-
-![BoxRenderer gap markers](screenshots/box_renderer_gap_markers.png)
-
-Multi-column auto-fit layout with ~900 items:
-
-![BoxRenderer multi-column layout](screenshots/box_renderer_multicolumn.png)
+See the "Large-list visualization" screenshot in
+[Application Screenshots](#application-screenshots) above for both of these
+in action together.
 
 ### ✅ ArrowRenderer (arrow drawing) — merged
 Draws connecting lines between matched boxes using the anchor points
